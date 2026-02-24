@@ -276,3 +276,142 @@
 
   <section class="about">
     <h3>CONTRACT INFO</h3>
+    <p>TruckaJumpa contract: single Java file, unique contract id and hex constants. Constructor-set config; no readonly; immutable where applicable. Safe for mainnet-style use (deterministic logic, no external calls). Addresses and hex not reused from Frogget or other contracts.</p>
+  </section>
+
+  <section class="about">
+    <p>Play again: click START or RESTART. Pause with P. Adjust speed in Settings. Touch devices show a JUMP button. High scores are saved locally. No account required.</p>
+  </section>
+
+  <section class="about">
+    <p>Compatible with desktop and mobile. Single-page app. All game state in memory; refresh clears state but high scores persist in localStorage.</p>
+  </section>
+
+  <section class="about">
+    <p>TruckaJumpa — Haul-and-leap track ledger. Sequel to Frogga. RetroGameESP. Enjoy!</p>
+  </section>
+
+  <section class="about">
+    <h3>FROGGA UNIVERSE</h3>
+    <p>Frogget (Frogga) is the frog that crosses the road. TruckaJumpa is the truck that jumps over barriers. Same universe, different games. Both use constructor-set config and unique contract identities.</p>
+  </section>
+
+  <section class="about">
+    <p>No token, no claim. High scores only. Change FPS in Settings to make the game easier (Slow) or harder (Fast). Pause anytime with P.</p>
+  </section>
+
+  <section class="about">
+    <p>© RetroGameESP. TruckaJumpa contract: Java single file, 1870+ lines. Unique hex: TRUCKA_CONTRACT_ID, TRUCKA_VERSION_HASH. Not reused from other contracts.</p>
+  </section>
+
+  <section class="about">
+    <h3>SHORTCUTS</h3>
+    <p>SPACE or Up — jump. P — pause. No other keys affect gameplay. On mobile, use the JUMP button.</p>
+  </section>
+
+  <section class="about">
+    <p>RetroGameESP — TruckaJumpa. Same universe as Frogga. Single-page, no backend. Have fun!</p>
+  </section>
+
+  <footer class="about">
+    RetroGameESP — TruckaJumpa. Same universe as Frogga. Have fun!
+  </footer>
+
+  <script>
+    (function () {
+      // TruckaJumpa web — sequel to Frogga. Track length 24, truck at 0, obstacles move left.
+      // Jump duration 6 ticks. Spawn every 8 ticks (minus level/3). Points: 80 + level*5 per clear.
+      // loadHighScores / saveHighScores: localStorage key truckajumpa_high_scores
+      // spawnObstacle: add obstacle at TRACK_LENGTH-1 with random width
+      // resetGame: lives 3, score 0, level 1, tick 0, jumpTicksLeft 0, clear obstacles
+      // jump: set jumpTicksLeft to JUMP_DURATION_TICKS if grounded
+      // moveObstacles: subtract speed from each obstacle position; remove if past left
+      // checkCleared: if obstacle fully past truck, add score and remove
+      // checkCollision: if truck grounded and any obstacle overlaps TRUCK_POSITION, return true
+      // tick: increment tick; decrement jumpTicksLeft; moveObstacles; checkCleared; if collision lives--
+      // draw: clear canvas; draw track cells; draw obstacles (red); draw truck (orange, darker when jumping)
+      // loop: requestAnimationFrame; elapsed ticks from getFPS(); tick() then draw()
+      // Key: Space/ArrowUp -> jump; P -> toggle pause
+      // Buttons: START (resetGame, hide screens), RESTART, RESUME
+      // Touch: JUMP button when ontouchstart present
+      var TRACK_LENGTH = 24;
+      var TRUCK_POSITION = 0;
+      var CELL_W = 28;
+      var CELL_H = 56;
+      var JUMP_DURATION_TICKS = 6;
+      var TICKS_PER_SPAWN = 8;
+      var INITIAL_LIVES = 3;
+      var POINTS_PER_OBSTACLE = 80;
+      var POINTS_LEVEL_BONUS = 60;
+      var MIN_OBSTACLE_WIDTH = 1;
+      var MAX_OBSTACLE_WIDTH = 3;
+      var HIGH_SCORE_KEY = 'truckajumpa_high_scores';
+      var MAX_HIGH_SCORES = 10;
+      var DEFAULT_FPS = 14;
+
+      function getFPS() {
+        var el = document.getElementById('opt-speed');
+        return el ? parseInt(el.value, 10) || DEFAULT_FPS : DEFAULT_FPS;
+      }
+
+      var canvas = document.getElementById('game');
+      var ctx = canvas.getContext('2d');
+
+      var state = {
+        lives: INITIAL_LIVES,
+        score: 0,
+        level: 1,
+        tick: 0,
+        jumpTicksLeft: 0,
+        gameOver: false,
+        obstacles: [],
+        obstacleSpeed: 1
+      };
+
+      function loadHighScores() {
+        try {
+          var raw = localStorage.getItem(HIGH_SCORE_KEY);
+          if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        return [];
+      }
+
+      function saveHighScores(list) {
+        try {
+          localStorage.setItem(HIGH_SCORE_KEY, JSON.stringify(list.slice(0, MAX_HIGH_SCORES)));
+        } catch (e) {}
+      }
+
+      function addHighScore(score, level) {
+        var list = loadHighScores();
+        list.push({ score: score, level: level, ts: Date.now() });
+        list.sort(function (a, b) { return b.score - a.score; });
+        saveHighScores(list);
+        renderHighScores();
+      }
+
+      function renderHighScores() {
+        var list = loadHighScores();
+        var ol = document.getElementById('high-score-list');
+        ol.innerHTML = '';
+        list.slice(0, MAX_HIGH_SCORES).forEach(function (entry, i) {
+          var li = document.createElement('li');
+          li.innerHTML = '<span>' + (i + 1) + '. Lv.' + entry.level + '</span><span class="score">' + entry.score + '</span>';
+          ol.appendChild(li);
+        });
+        if (list.length === 0) {
+          var li = document.createElement('li');
+          li.textContent = 'No scores yet';
+          li.style.color = '#7f8c8d';
+          ol.appendChild(li);
+        }
+      }
+
+      function spawnObstacle() {
+        var width = MIN_OBSTACLE_WIDTH + Math.floor(Math.random() * (MAX_OBSTACLE_WIDTH - MIN_OBSTACLE_WIDTH + 1));
+        state.obstacles.push({ position: TRACK_LENGTH - 1, width: width });
+      }
+
+      function resetGame() {
+        state.lives = INITIAL_LIVES;
+        state.score = 0;
