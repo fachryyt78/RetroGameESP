@@ -137,3 +137,142 @@
     .high-scores {
       max-width: 672px;
       width: 100%;
+      margin-top: 20px;
+      padding: 12px;
+      background: rgba(44, 62, 80, 0.6);
+      border: 2px solid #34495e;
+      font-size: 8px;
+    }
+
+    .high-scores h3 { font-size: 8px; margin-bottom: 8px; color: var(--truck); }
+    .high-scores ol { list-style: none; padding-left: 0; }
+    .high-scores li { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #34495e; color: #95a5a6; }
+    .high-scores li span.score { color: var(--white); }
+
+    .about {
+      max-width: 672px;
+      margin-top: 20px;
+      padding: 12px;
+      font-size: 7px;
+      color: #7f8c8d;
+      line-height: 2;
+      text-align: center;
+    }
+
+    .about h3 { font-size: 8px; color: var(--truck); margin-bottom: 8px; }
+    .settings-panel {
+      max-width: 672px;
+      width: 100%;
+      margin-top: 14px;
+      padding: 12px;
+      background: rgba(44, 62, 80, 0.5);
+      border: 2px solid #34495e;
+      font-size: 7px;
+    }
+    .settings-panel label { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer; color: #95a5a6; }
+    .settings-panel input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--truck); }
+    .settings-panel select { font-family: var(--font); font-size: 7px; background: #34495e; color: var(--white); border: none; padding: 4px 8px; }
+
+    .touch-buttons { display: none; margin-top: 12px; }
+    .touch-buttons.visible { display: block; }
+    .touch-buttons button { width: 72px; height: 56px; padding: 0; font-size: 18px; background: #34495e; color: var(--white); margin: 4px; }
+
+    @media (max-width: 720px) {
+      .game-wrap { padding: 4px; }
+      #game { width: 100%; height: auto; max-width: 672px; }
+      .touch-buttons.visible { display: block; }
+    }
+
+    button:focus-visible { outline: 2px solid var(--truck); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <h1>RETROGAMEESP</h1>
+  <p class="subtitle">TRUCKAJUMPA — SEQUEL TO FROGGA</p>
+
+  <div class="game-wrap">
+    <div class="canvas-wrap">
+      <canvas id="game" width="672" height="56"></canvas>
+      <div class="scanline" aria-hidden="true"></div>
+      <div id="screen-start" class="screen">
+        <h2>TRUCKAJUMPA</h2>
+        <p>Jump over barriers. Truck stays at the left; obstacles move toward you.<br>Press SPACE or UP to jump. Don't land on a barrier!</p>
+        <button type="button" id="btn-start">START</button>
+      </div>
+      <div id="screen-gameover" class="screen hidden">
+        <h2>GAME OVER</h2>
+        <p class="score-line">SCORE: <span id="go-score">0</span> &nbsp; LEVEL: <span id="go-level">1</span></p>
+        <button type="button" id="btn-restart">PLAY AGAIN</button>
+      </div>
+      <div id="screen-pause" class="screen hidden">
+        <h2>PAUSED</h2>
+        <p>Press P or click Resume.</p>
+        <button type="button" id="btn-resume">RESUME</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="hud">
+    <span>SCORE: <strong id="hud-score">0</strong></span>
+    <span>LEVEL: <strong id="hud-level">1</strong></span>
+    <span>LIVES: <strong id="hud-lives">3</strong></span>
+  </div>
+
+  <div class="touch-buttons" id="touch-buttons">
+    <button type="button" id="btn-jump-touch">JUMP</button>
+  </div>
+
+  <p class="controls">
+    <kbd>SPACE</kbd> or <kbd>↑</kbd> to jump &nbsp; Pause: <kbd>P</kbd>
+  </p>
+
+  <section class="high-scores">
+    <h3>HIGH SCORES</h3>
+    <ol id="high-score-list"></ol>
+  </section>
+
+  <section class="settings-panel">
+    <h3>SETTINGS</h3>
+    <label><input type="checkbox" id="opt-sound" checked /> Sound (placeholder)</label>
+    <label>Speed: <select id="opt-speed"><option value="14">Normal</option><option value="12">Slow</option><option value="16">Fast</option></select></label>
+  </section>
+
+  <section class="about">
+    <h3>HOW TO PLAY</h3>
+    <p>TruckaJumpa is the sequel to Frogga. Your truck is fixed at the start of the track. Barriers move from right to left. Press jump (Space or Up) to leap over them. If you're on the ground when a barrier reaches your position, you crash and lose a life. Clear barriers by jumping over them to score. Higher levels increase obstacle speed and spawn rate.</p>
+  </section>
+
+  <section class="about">
+    <h3>TIPS</h3>
+    <p>Time your jump so you're in the air when the barrier passes. Jump duration is fixed — don't jump too early or too late. Watch the closest barrier and jump when it's one or two cells away (depends on speed).</p>
+  </section>
+
+  <section class="about">
+    <h3>CREDITS</h3>
+    <p>TruckaJumpa — Haul-and-leap track ledger. Sequel to Frogget (Frogga). Contract: single Java file, constructor-set config, unique contract id. No token, no claim. RetroGameESP web interface. Font: Press Start 2P.</p>
+  </section>
+
+  <section class="about">
+    <h3>LEVELS</h3>
+    <p>Level 1: Slow obstacles. Level 2–4: Faster. Level 5+: Denser and quicker. Spawn interval shortens every few levels. No level cap.</p>
+  </section>
+
+  <section class="about">
+    <h3>KEYBOARD</h3>
+    <p>SPACE or Arrow Up — jump. P — pause/resume. All other keys ignored during play.</p>
+  </section>
+
+  <section class="about">
+    <p>RetroGameESP is the web interface for TruckaJumpa. Contract logic lives in a single Java file (TruckaJumpa.java). This page replicates the same rules: 24-cell track, truck at position 0, 6-tick jump, obstacles move left, collision when truck grounded and obstacle at 0.</p>
+  </section>
+
+  <section class="about">
+    <p>Sequel to Frogga (Frogget): same universe, different mechanic. Frogga crosses lanes; TruckaJumpa jumps over barriers on one track. No token, no claim. High scores stored in this browser.</p>
+  </section>
+
+  <section class="about">
+    <p>Canvas size 672×56 px (24 cells × 28 px). Truck orange #e67e22, barriers red #c0392b, track #2c3e50. FPS selectable in Settings (12/14/16).</p>
+  </section>
+
+  <section class="about">
+    <h3>CONTRACT INFO</h3>
