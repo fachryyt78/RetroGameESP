@@ -415,3 +415,142 @@
       function resetGame() {
         state.lives = INITIAL_LIVES;
         state.score = 0;
+        state.level = 1;
+        state.tick = 0;
+        state.jumpTicksLeft = 0;
+        state.gameOver = false;
+        state.obstacles = [];
+        state.obstacleSpeed = 1;
+      }
+
+      function jump() {
+        if (state.gameOver || state.jumpTicksLeft > 0) return;
+        state.jumpTicksLeft = JUMP_DURATION_TICKS;
+      }
+
+      function moveObstacles() {
+        var speed = state.obstacleSpeed + Math.floor(state.level / 2);
+        for (var i = 0; i < state.obstacles.length; i++) {
+          state.obstacles[i].position -= speed;
+        }
+        state.obstacles = state.obstacles.filter(function (ob) {
+          return ob.position + ob.width >= TRUCK_POSITION;
+        });
+      }
+
+      function checkCleared() {
+        for (var i = state.obstacles.length - 1; i >= 0; i--) {
+          if (state.obstacles[i].position + state.obstacles[i].width < TRUCK_POSITION) {
+            state.score += POINTS_PER_OBSTACLE + state.level * 5;
+            state.obstacles.splice(i, 1);
+          }
+        }
+      }
+
+      function checkCollision() {
+        if (state.jumpTicksLeft > 0) return false;
+        for (var i = 0; i < state.obstacles.length; i++) {
+          var ob = state.obstacles[i];
+          if (ob.position <= TRUCK_POSITION && ob.position + ob.width > TRUCK_POSITION) return true;
+        }
+        return false;
+      }
+
+      function tick() {
+        if (state.gameOver) return;
+        state.tick++;
+        if (state.jumpTicksLeft > 0) state.jumpTicksLeft--;
+        moveObstacles();
+        checkCleared();
+        if (checkCollision()) {
+          state.lives--;
+          if (state.lives <= 0) {
+            state.gameOver = true;
+            addHighScore(state.score, state.level);
+            document.getElementById('go-score').textContent = state.score;
+            document.getElementById('go-level').textContent = state.level;
+            document.getElementById('screen-gameover').classList.remove('hidden');
+            document.getElementById('screen-start').classList.add('hidden');
+            document.getElementById('screen-pause').classList.add('hidden');
+          }
+        }
+        if (state.tick % Math.max(2, TICKS_PER_SPAWN - Math.floor(state.level / 3)) === 0 && state.tick > 0) {
+          spawnObstacle();
+        }
+      }
+
+      function draw() {
+        ctx.fillStyle = '#2c3e50';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        var i;
+        for (i = 0; i < TRACK_LENGTH; i++) {
+          var x = i * CELL_W;
+          ctx.fillStyle = '#34495e';
+          ctx.fillRect(x + 1, 2, CELL_W - 2, CELL_H - 4);
+        }
+        for (i = 0; i < state.obstacles.length; i++) {
+          var ob = state.obstacles[i];
+          var ox = ob.position * CELL_W;
+          if (ox + ob.width * CELL_W >= 0 && ox < canvas.width) {
+            ctx.fillStyle = '#c0392b';
+            ctx.fillRect(ox + 2, 4, ob.width * CELL_W - 4, CELL_H - 8);
+          }
+        }
+        var tx = TRUCK_POSITION * CELL_W;
+        ctx.fillStyle = state.jumpTicksLeft > 0 ? '#d35400' : '#e67e22';
+        ctx.fillRect(tx + 2, 4, CELL_W - 4, CELL_H - 8);
+        ctx.strokeStyle = '#2c3e50';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(tx + 2, 4, CELL_W - 4, CELL_H - 8);
+        document.getElementById('hud-score').textContent = state.score;
+        document.getElementById('hud-level').textContent = state.level;
+        document.getElementById('hud-lives').textContent = state.lives;
+      }
+
+      var lastTick = 0;
+      function loop(now) {
+        var fps = getFPS();
+        var msPerTick = 1000 / fps;
+        if (!state.gameOver && !state.paused) {
+          var elapsed = Math.min(5, Math.floor((now - lastTick) / msPerTick));
+          for (var i = 0; i < elapsed; i++) tick();
+          lastTick = now;
+        } else if (state.paused) lastTick = now;
+        draw();
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(function (now) { state.paused = false; lastTick = now; requestAnimationFrame(loop); });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.code === 'KeyP') {
+          e.preventDefault();
+          if (state.gameOver) return;
+          state.paused = !state.paused;
+          var el = document.getElementById('screen-pause');
+          if (state.paused) el.classList.remove('hidden');
+          else el.classList.add('hidden');
+          return;
+        }
+        if (e.code === 'Space' || e.code === 'ArrowUp') {
+          e.preventDefault();
+          jump();
+        }
+      });
+
+      document.getElementById('btn-start').addEventListener('click', function () {
+        resetGame();
+        document.getElementById('screen-start').classList.add('hidden');
+        document.getElementById('screen-gameover').classList.add('hidden');
+        document.getElementById('screen-pause').classList.add('hidden');
+      });
+
+      document.getElementById('btn-restart').addEventListener('click', function () {
+        resetGame();
+        document.getElementById('screen-gameover').classList.add('hidden');
+        document.getElementById('screen-pause').classList.add('hidden');
+      });
+
+      document.getElementById('btn-resume').addEventListener('click', function () {
+        state.paused = false;
+        document.getElementById('screen-pause').classList.add('hidden');
+      });
