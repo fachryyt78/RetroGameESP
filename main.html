@@ -693,3 +693,142 @@
         for (var p = 0; p < TRACK_LENGTH; p++) {
           var t = getCellType(p);
           if (t === 'truck') s += 'T';
+          else if (t === 'obstacle') s += '#';
+          else s += '.';
+        }
+        return s;
+      }
+      window.truckaToGridString = toGridString;
+      function getTicksUntilNextSpawn() {
+        var interval = getSpawnInterval();
+        var t = state.tick;
+        if (t === 0) return interval;
+        return interval - (t % interval);
+      }
+      window.truckaGetTicksUntilNextSpawn = getTicksUntilNextSpawn;
+      function getSafeJumpTicks() {
+        if (state.jumpTicksLeft > 0) return state.jumpTicksLeft;
+        var truckPos = TRUCK_POSITION;
+        var speed = getObstacleSpeed();
+        var minTicks = 999;
+        for (var i = 0; i < state.obstacles.length; i++) {
+          var ob = state.obstacles[i];
+          if (ob.position > truckPos) {
+            var ticks = Math.floor((ob.position - truckPos) / speed);
+            if (ticks < minTicks) minTicks = ticks;
+          }
+        }
+        return minTicks === 999 ? JUMP_DURATION_TICKS : Math.min(minTicks, JUMP_DURATION_TICKS);
+      }
+      window.truckaGetSafeJumpTicks = getSafeJumpTicks;
+      function getObstacleAt(pos) {
+        for (var i = 0; i < state.obstacles.length; i++) {
+          var ob = state.obstacles[i];
+          if (pos >= ob.position && pos < ob.position + ob.width) return i;
+        }
+        return -1;
+      }
+      window.truckaGetObstacleAt = getObstacleAt;
+      function getObstaclePosition(idx) {
+        if (idx < 0 || idx >= state.obstacles.length) return -1;
+        return state.obstacles[idx].position;
+      }
+      function getObstacleWidthByIndex(idx) {
+        if (idx < 0 || idx >= state.obstacles.length) return 0;
+        return state.obstacles[idx].width;
+      }
+      window.truckaGetObstaclePosition = getObstaclePosition;
+      window.truckaGetObstacleWidthByIndex = getObstacleWidthByIndex;
+      function countObstaclesInRange(from, to) {
+        var n = 0;
+        for (var i = 0; i < state.obstacles.length; i++) {
+          var ob = state.obstacles[i];
+          if (ob.position + ob.width > from && ob.position < to) n++;
+        }
+        return n;
+      }
+      window.truckaCountObstaclesInRange = countObstaclesInRange;
+      function getMaxPossibleScoreApprox() { return 99 * (POINTS_PER_OBSTACLE * 30 + POINTS_LEVEL_BONUS); }
+      window.truckaGetMaxPossibleScoreApprox = getMaxPossibleScoreApprox;
+      function getClearedEstimate() { var p = getPointsPerClear(); return p > 0 ? Math.floor(state.score / p) : 0; }
+      window.truckaGetClearedEstimate = getClearedEstimate;
+      function validateEncoded(enc) {
+        if (!enc || enc.indexOf('|') < 0) return false;
+        var parts = enc.split('|')[0].split(',');
+        return parts.length >= 6;
+      }
+      window.truckaValidateEncoded = validateEncoded;
+      function getScoreFromEncoded(enc) {
+        if (!enc || enc.indexOf('|') < 0) return 0;
+        var parts = enc.split('|')[0].split(',');
+        return parts.length >= 2 ? parseInt(parts[1], 10) : 0;
+      }
+      window.truckaGetScoreFromEncoded = getScoreFromEncoded;
+      function getStateFlags() {
+        var f = 0;
+        if (!state.gameOver && state.jumpTicksLeft === 0) f |= 1;
+        if (state.gameOver) f |= 2;
+        if (state.jumpTicksLeft > 0) f |= 4;
+        return f;
+      }
+      window.truckaGetStateFlags = getStateFlags;
+      function getStateSummary() {
+        return 'TruckaJumpa L' + state.level + ' S' + state.score + ' Lives' + state.lives + ' J' + state.jumpTicksLeft + ' Obs' + state.obstacles.length + (state.gameOver ? ' GAMEOVER' : '');
+      }
+      window.truckaGetStateSummary = getStateSummary;
+      function getStateChecksum() {
+        var h = state.lives * 31 + state.score * 37 + state.level * 41 + state.tick * 43;
+        for (var i = 0; i < state.obstacles.length; i++) {
+          h = h * 59 + state.obstacles[i].position * 61 + state.obstacles[i].width * 67;
+        }
+        return h;
+      }
+      window.truckaGetStateChecksum = getStateChecksum;
+      function getDisplayWidth() { return TRACK_LENGTH * CELL_W; }
+      function getDisplayHeight() { return CELL_H; }
+      window.truckaGetDisplayWidth = getDisplayWidth;
+      window.truckaGetDisplayHeight = getDisplayHeight;
+      var PALETTE_TRUCK_HEX = '#e67e22';
+      var PALETTE_BARRIER_HEX = '#c0392b';
+      var PALETTE_TRACK_HEX = '#2c3e50';
+      window.truckaGetPaletteTruckHex = function () { return PALETTE_TRUCK_HEX; };
+      window.truckaGetPaletteBarrierHex = function () { return PALETTE_BARRIER_HEX; };
+      window.truckaGetPaletteTrackHex = function () { return PALETTE_TRACK_HEX; };
+      function getVersionString() { return '1.0'; }
+      window.truckaGetVersionString = getVersionString;
+      function getGameTitle() { return 'TruckaJumpa'; }
+      function getGameSubtitle() { return 'Sequel to Frogga'; }
+      window.truckaGetGameTitle = getGameTitle;
+      window.truckaGetGameSubtitle = getGameSubtitle;
+      function getUniverseName() { return 'FroggaUniverse'; }
+      window.truckaGetUniverseName = getUniverseName;
+      function isSequelToFrogget() { return true; }
+      window.truckaIsSequelToFrogget = isSequelToFrogget;
+
+      var TRUCKA_DISPLAY_DEFAULT_WIDTH = 672;
+      var TRUCKA_DISPLAY_DEFAULT_HEIGHT = 56;
+      var TRUCKA_MS_PER_TICK = 71;
+      var TRUCKA_DEFAULT_FPS_WEB = 14;
+      window.truckaGetDisplayDefaultWidth = function () { return TRUCKA_DISPLAY_DEFAULT_WIDTH; };
+      window.truckaGetDisplayDefaultHeight = function () { return TRUCKA_DISPLAY_DEFAULT_HEIGHT; };
+      window.truckaGetMsPerTick = function () { return TRUCKA_MS_PER_TICK; };
+      window.truckaGetDefaultFpsWeb = function () { return TRUCKA_DEFAULT_FPS_WEB; };
+      function getTicksFromElapsedMs(ms) { return Math.floor(ms / TRUCKA_MS_PER_TICK); }
+      window.truckaGetTicksFromElapsedMs = getTicksFromElapsedMs;
+      function getRecommendedJumpTick() {
+        var truckPos = TRUCK_POSITION;
+        var speed = getObstacleSpeed();
+        var bestTick = -1;
+        var bestDist = 999;
+        for (var i = 0; i < state.obstacles.length; i++) {
+          var ob = state.obstacles[i];
+          if (ob.position > truckPos) {
+            var ticksToReach = Math.floor((ob.position - truckPos) / speed);
+            var dist = Math.abs(ticksToReach - JUMP_DURATION_TICKS / 2);
+            if (dist < bestDist) { bestDist = dist; bestTick = ticksToReach; }
+          }
+        }
+        return bestTick;
+      }
+      window.truckaGetRecommendedJumpTick = getRecommendedJumpTick;
+      function getTicksUntilObstacleAtTruck() {
