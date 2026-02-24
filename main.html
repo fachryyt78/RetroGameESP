@@ -832,3 +832,140 @@
       }
       window.truckaGetRecommendedJumpTick = getRecommendedJumpTick;
       function getTicksUntilObstacleAtTruck() {
+        var truckPos = TRUCK_POSITION;
+        var speed = getObstacleSpeed();
+        var minTicks = 999;
+        for (var i = 0; i < state.obstacles.length; i++) {
+          var ob = state.obstacles[i];
+          if (ob.position > truckPos) {
+            var ticks = Math.floor((ob.position - truckPos) / speed);
+            if (ticks < minTicks) minTicks = ticks;
+          }
+        }
+        return minTicks === 999 ? -1 : minTicks;
+      }
+      window.truckaGetTicksUntilObstacleAtTruck = getTicksUntilObstacleAtTruck;
+      function getViewportStart(offset) {
+        var start = TRUCK_POSITION + offset - 6;
+        return Math.max(0, Math.min(start, TRACK_LENGTH - 12));
+      }
+      function getVisibleObstacleCount(viewportStart) {
+        var end = viewportStart + 12;
+        var n = 0;
+        for (var i = 0; i < state.obstacles.length; i++) {
+          var ob = state.obstacles[i];
+          if (ob.position + ob.width > viewportStart && ob.position < end) n++;
+        }
+        return n;
+      }
+      window.truckaGetViewportStart = getViewportStart;
+      window.truckaGetVisibleObstacleCount = getVisibleObstacleCount;
+      function getEvtJump() { return 'TruckaJump'; }
+      function getEvtCleared() { return 'TruckaObstacleCleared'; }
+      function getEvtCrash() { return 'TruckaCrash'; }
+      function getEvtGameOver() { return 'TruckaGameOver'; }
+      window.truckaGetEvtJump = getEvtJump;
+      window.truckaGetEvtCleared = getEvtCleared;
+      window.truckaGetEvtCrash = getEvtCrash;
+      window.truckaGetEvtGameOver = getEvtGameOver;
+      function getErrBounds() { return 'TruckaOutOfBounds'; }
+      function getErrCrash() { return 'TruckaCrashed'; }
+      function getErrGameOver() { return 'TruckaGameOver'; }
+      function getErrAlreadyJumping() { return 'TruckaAlreadyJumping'; }
+      window.truckaGetErrBounds = getErrBounds;
+      window.truckaGetErrCrash = getErrCrash;
+      window.truckaGetErrGameOver = getErrGameOver;
+      window.truckaGetErrAlreadyJumping = getErrAlreadyJumping;
+      function getAnimTruckGround() { return 0; }
+      function getAnimTruckAir() { return 1; }
+      window.truckaGetAnimTruckGround = getAnimTruckGround;
+      window.truckaGetAnimTruckAir = getAnimTruckAir;
+      function getTruckAnimationFrame() { return state.jumpTicksLeft > 0 ? 1 : 0; }
+      window.truckaGetTruckAnimationFrame = getTruckAnimationFrame;
+      function getSnapshot() {
+        var obs = [];
+        for (var i = 0; i < state.obstacles.length; i++) {
+          obs.push({ position: state.obstacles[i].position, width: state.obstacles[i].width });
+        }
+        return { lives: state.lives, score: state.score, level: state.level, jumpTicksLeft: state.jumpTicksLeft, gameOver: state.gameOver, obstacles: obs };
+      }
+      window.truckaGetSnapshot = getSnapshot;
+      function formatContractIdShort() {
+        if (!TRUCKA_CONTRACT_ID || TRUCKA_CONTRACT_ID.length < 12) return TRUCKA_CONTRACT_ID;
+        return TRUCKA_CONTRACT_ID.substring(0, 10) + '...' + TRUCKA_CONTRACT_ID.substring(TRUCKA_CONTRACT_ID.length - 8);
+      }
+      window.truckaFormatContractIdShort = formatContractIdShort;
+      function getContractFingerprint() { return TRUCKA_CONTRACT_ID + '-' + TRUCKA_VERSION_HASH; }
+      window.truckaGetContractFingerprint = getContractFingerprint;
+      function getContractInfo() { return 'TruckaJumpa v1 ' + TRUCKA_CONTRACT_ID + ' ' + TRUCKA_VERSION_HASH; }
+      window.truckaGetContractInfo = getContractInfo;
+      function getSequelInfo() { return 'TruckaJumpa follows Frogget. Same universe, truck jump mechanics.'; }
+      window.truckaGetSequelInfo = getSequelInfo;
+
+      var TRUCKA_TRACK_LENGTH_DEFAULT = 24;
+      var FROGGET_TRACK_COLS = 11;
+      window.truckaGetTrackLengthDefault = function () { return TRUCKA_TRACK_LENGTH_DEFAULT; };
+      window.truckaGetFroggetTrackCols = function () { return FROGGET_TRACK_COLS; };
+      function getLevelDesc(lvl) {
+        if (lvl <= 0) return 'Invalid level';
+        if (lvl <= 2) return 'Easy. Slow obstacles.';
+        if (lvl <= 5) return 'Medium. More speed.';
+        if (lvl <= 8) return 'Hard. Tight timing.';
+        return 'Very hard. Expert jumps.';
+      }
+      window.truckaGetLevelDesc = getLevelDesc;
+      function getScoreForNextBonus() { return POINTS_LEVEL_BONUS; }
+      window.truckaGetScoreForNextBonus = getScoreForNextBonus;
+      function isHighScoreEligible(minScore) { return state.gameOver && state.score >= minScore; }
+      window.truckaIsHighScoreEligible = isHighScoreEligible;
+      function getJumpProgressPct() { return getJumpProgress() * 100; }
+      window.truckaGetJumpProgressPct = getJumpProgressPct;
+      function canJump() { return !state.gameOver && state.jumpTicksLeft === 0; }
+      function isJumping() { return state.jumpTicksLeft > 0; }
+      window.truckaCanJump = canJump;
+      window.truckaIsJumping = isJumping;
+      function isActive() { return !state.gameOver; }
+      window.truckaIsActive = isActive;
+      function getRemainingLives() { return Math.max(0, state.lives); }
+      window.truckaGetRemainingLives = getRemainingLives;
+      function getStateScore() { return state.score; }
+      function getStateLevel() { return state.level; }
+      function getStateLives() { return state.lives; }
+      function getStateGameOver() { return state.gameOver; }
+      function getStateJumpTicksLeft() { return state.jumpTicksLeft; }
+      window.truckaGetStateScore = getStateScore;
+      window.truckaGetStateLevel = getStateLevel;
+      window.truckaGetStateLives = getStateLives;
+      window.truckaGetStateGameOver = getStateGameOver;
+      window.truckaGetStateJumpTicksLeft = getStateJumpTicksLeft;
+      function getConfigTrackLength() { return TRACK_LENGTH; }
+      function getConfigTruckPosition() { return TRUCK_POSITION; }
+      function getConfigJumpDurationTicks() { return JUMP_DURATION_TICKS; }
+      function getConfigInitialLives() { return INITIAL_LIVES; }
+      function getConfigPointsPerObstacle() { return POINTS_PER_OBSTACLE; }
+      function getConfigPointsLevelBonus() { return POINTS_LEVEL_BONUS; }
+      window.truckaGetConfigTrackLength = getConfigTrackLength;
+      window.truckaGetConfigTruckPosition = getConfigTruckPosition;
+      window.truckaGetConfigJumpDurationTicks = getConfigJumpDurationTicks;
+      window.truckaGetConfigInitialLives = getConfigInitialLives;
+      window.truckaGetConfigPointsPerObstacle = getConfigPointsPerObstacle;
+      window.truckaGetConfigPointsLevelBonus = getConfigPointsLevelBonus;
+      function getTickCounter() { return state.tick; }
+      function getObstacleSpeedInternal() { return state.obstacleSpeed; }
+      window.truckaGetTickCounter = getTickCounter;
+      window.truckaGetObstacleSpeedInternal = getObstacleSpeedInternal;
+      window.truckaGameTitle = 'TruckaJumpa';
+      window.truckaGameSubtitle = 'Sequel to Frogga';
+      window.truckaWebInterface = 'RetroGameESP';
+      window.truckaContractId = TRUCKA_CONTRACT_ID;
+      window.truckaVersionHash = TRUCKA_VERSION_HASH;
+      window.truckaTrackLength = TRACK_LENGTH;
+      window.truckaJumpDurationTicks = JUMP_DURATION_TICKS;
+      window.truckaDefaultLives = DEFAULT_LIVES;
+
+      renderHighScores();
+    })();
+  </script>
+</body>
+</html>
+
